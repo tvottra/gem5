@@ -44,10 +44,7 @@ system.clk_domain.voltage_domain = VoltageDomain()
 
 # Set up the system
 system.mem_mode = "timing"  # Use timing accesses
-system.mem_ranges = [
-    AddrRange("512MB"),
-    AddrRange("512MB"),
-]  # Create an address range
+system.mem_ranges = [AddrRange("8192MB")]  # Create an address range
 
 # Create a simple CPU
 system.cpu = X86TimingSimpleCPU()
@@ -66,7 +63,7 @@ system.cpu.dcache_port = system.membus.cpu_side_ports
 # Note: side_ports is a vector. The process is symmetrical, and the new port is appended
 # CPU side port is a new name to master port
 system.vortex.request_port = system.membus.cpu_side_ports
-system.vortex.response_port = system.membus.cpu_side_ports
+system.vortex.response_port = system.membus.mem_side_ports
 
 
 # create the interrupt controller for the CPU and connect to the membus
@@ -82,13 +79,13 @@ system.mem_ctrl.dram.range = system.mem_ranges[0]
 system.mem_ctrl.port = system.membus.mem_side_ports
 
 # Create a custom memory controller to interconnect vortex with XBar
-system.vortex_mem_ctrl = MemCtrl()
-system.vortex_mem_ctrl.dram = NVM_2400_1x64()
-system.vortex_mem_ctrl.dram.range = system.mem_ranges[1]
-system.vortex_mem_ctrl.port = system.membus.mem_side_ports
+# system.vortex_mem_ctrl = MemCtrl()
+# system.vortex_mem_ctrl.dram = NVM_2400_1x64()
+# system.vortex_mem_ctrl.dram.range = system.mem_ranges[1]
+# system.vortex_mem_ctrl.port = system.membus.mem_side_ports
 
 # Connect the system up to the membus
-system.system_port = system.membus.cpu_side_ports[0:2]
+system.system_port = system.membus.cpu_side_ports
 
 # Create a process for a simple "Hello World" application
 process = Process()

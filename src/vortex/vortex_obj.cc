@@ -48,9 +48,9 @@ VortexObj::getPort(const std::string &if_name, PortID idx)
     panic_if(idx != InvalidPortID, "This object doesn't support vector ports");
 
     // This is the name from the Python SimObject declaration (VortexObj.py)
-    if (if_name == "mem_side") {
+    if (if_name == "request_port") {
         return requestPort;
-    } else if (if_name == "vortex_port") {
+    } else if (if_name == "response_port") {
         return responsePort;
     } else {
         // pass it along to our super class
@@ -74,6 +74,7 @@ VortexObj::VortexResponsePort::sendPacket(PacketPtr pkt)
 AddrRangeList
 VortexObj::VortexResponsePort::getAddrRanges() const
 {
+    DPRINTF(VortexObj, "ResponsePort getAddrRanges\n");
     return owner->getAddrRanges();
 }
 
