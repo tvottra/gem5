@@ -47,11 +47,10 @@ class VortexObj : public SimObject
   private:
 
     /**
-     * Port on the CPU-side that receives requests.
-     * Mostly just forwards requests to the owner.
-     * Part of a vector of ports. One for each CPU port (e.g., data, inst)
+     * Port on the Vortex that receives requests.
+     * Currently is a dummy
      */
-    class CPUSidePort : public ResponsePort
+    class VortexResponsePort : public ResponsePort
     {
       private:
         /// The object that owns this object (VortexObj)
@@ -67,7 +66,7 @@ class VortexObj : public SimObject
         /**
          * Constructor. Just calls the superclass constructor.
          */
-        CPUSidePort(const std::string& name, VortexObj *owner) :
+        VortexResponsePort(const std::string& name, VortexObj *owner) :
             ResponsePort(name), owner(owner), needRetry(false),
             blockedPacket(nullptr)
         { }
@@ -131,9 +130,10 @@ class VortexObj : public SimObject
 
     /**
      * Port on the memory-side that receives responses.
-     * Mostly just forwards requests to the owner
+     * As a duummy, process the request without going through
+     * VortexResponsePort
      */
-    class MemSidePort : public RequestPort
+    class VortexRequestPort : public RequestPort
     {
       private:
         /// The object that owns this object (VortexObj)
@@ -146,7 +146,7 @@ class VortexObj : public SimObject
         /**
          * Constructor. Just calls the superclass constructor.
          */
-        MemSidePort(const std::string& name, VortexObj *owner) :
+        VortexRequestPort(const std::string& name, VortexObj *owner) :
             RequestPort(name), owner(owner), blockedPacket(nullptr)
         { }
 
@@ -220,12 +220,11 @@ class VortexObj : public SimObject
      */
     void sendRangeChange();
 
-    /// Instantiation of the CPU-side ports
-    CPUSidePort instPort;
-    CPUSidePort dataPort;
+    /// Instantiation of the Vortex-side ports
+    VortexResponsePort responsePort;
 
     /// Instantiation of the memory-side port
-    MemSidePort memPort;
+    VortexRequestPort requestPort;
 
     /// True if this is currently blocked waiting for a response.
     bool blocked;

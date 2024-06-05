@@ -33,6 +33,5 @@ class VortexObj(SimObject):
     cxx_header = "vortex/vortex_obj.hh"
     cxx_class = "gem5::VortexObj"
 
-    inst_port = ResponsePort("CPU side port, receives requests")
-    data_port = ResponsePort("CPU side port, receives requests")
-    mem_side = RequestPort("Memory side port, sends requests")
+    response_port = ResponsePort("Memory side port, receives requests")
+    request_port = RequestPort("Memory side port, sends requests")

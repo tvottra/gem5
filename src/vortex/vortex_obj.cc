@@ -36,9 +36,8 @@ namespace gem5
 
 VortexObj::VortexObj(const VortexObjParams &params) :
     SimObject(params),
-    instPort(params.name + ".inst_port", this),
-    dataPort(params.name + ".data_port", this),
-    memPort(params.name + ".mem_side", this),
+    responsePort(params.name + ".response_port", this),
+    requestPort(params.name + ".request_port", this),
     blocked(false)
 {
 }
@@ -50,11 +49,9 @@ VortexObj::getPort(const std::string &if_name, PortID idx)
 
     // This is the name from the Python SimObject declaration (VortexObj.py)
     if (if_name == "mem_side") {
-        return memPort;
-    } else if (if_name == "inst_port") {
-        return instPort;
-    } else if (if_name == "data_port") {
-        return dataPort;
+        return requestPort;
+    } else if (if_name == "vortex_port") {
+        return responsePort;
     } else {
         // pass it along to our super class
         return SimObject::getPort(if_name, idx);
@@ -62,7 +59,7 @@ VortexObj::getPort(const std::string &if_name, PortID idx)
 }
 
 void
-VortexObj::CPUSidePort::sendPacket(PacketPtr pkt)
+VortexObj::VortexResponsePort::sendPacket(PacketPtr pkt)
 {
     // Note: This flow control is very simple since the memobj is blocking.
 
@@ -75,13 +72,13 @@ VortexObj::CPUSidePort::sendPacket(PacketPtr pkt)
 }
 
 AddrRangeList
-VortexObj::CPUSidePort::getAddrRanges() const
+VortexObj::VortexResponsePort::getAddrRanges() const
 {
     return owner->getAddrRanges();
 }
 
 void
-VortexObj::CPUSidePort::trySendRetry()
+VortexObj::VortexResponsePort::trySendRetry()
 {
     if (needRetry && blockedPacket == nullptr) {
         // Only send a retry if the port is now completely free
@@ -92,14 +89,14 @@ VortexObj::CPUSidePort::trySendRetry()
 }
 
 void
-VortexObj::CPUSidePort::recvFunctional(PacketPtr pkt)
+VortexObj::VortexResponsePort::recvFunctional(PacketPtr pkt)
 {
     // Just forward to the memobj.
     return owner->handleFunctional(pkt);
 }
 
 bool
-VortexObj::CPUSidePort::recvTimingReq(PacketPtr pkt)
+VortexObj::VortexResponsePort::recvTimingReq(PacketPtr pkt)
 {
     // Just forward to the memobj.
     if (!owner->handleRequest(pkt)) {
@@ -111,7 +108,7 @@ VortexObj::CPUSidePort::recvTimingReq(PacketPtr pkt)
 }
 
 void
-VortexObj::CPUSidePort::recvRespRetry()
+VortexObj::VortexResponsePort::recvRespRetry()
 {
     // We should have a blocked packet if this function is called.
     assert(blockedPacket != nullptr);
@@ -125,7 +122,7 @@ VortexObj::CPUSidePort::recvRespRetry()
 }
 
 void
-VortexObj::MemSidePort::sendPacket(PacketPtr pkt)
+VortexObj::VortexRequestPort::sendPacket(PacketPtr pkt)
 {
     // Note: This flow control is very simple since the memobj is blocking.
 
@@ -138,14 +135,14 @@ VortexObj::MemSidePort::sendPacket(PacketPtr pkt)
 }
 
 bool
-VortexObj::MemSidePort::recvTimingResp(PacketPtr pkt)
+VortexObj::VortexRequestPort::recvTimingResp(PacketPtr pkt)
 {
     // Just forward to the memobj.
     return owner->handleResponse(pkt);
 }
 
 void
-VortexObj::MemSidePort::recvReqRetry()
+VortexObj::VortexRequestPort::recvReqRetry()
 {
     // We should have a blocked packet if this function is called.
     assert(blockedPacket != nullptr);
@@ -159,7 +156,7 @@ VortexObj::MemSidePort::recvReqRetry()
 }
 
 void
-VortexObj::MemSidePort::recvRangeChange()
+VortexObj::VortexRequestPort::recvRangeChange()
 {
     owner->sendRangeChange();
 }
@@ -178,7 +175,7 @@ VortexObj::handleRequest(PacketPtr pkt)
     blocked = true;
 
     // Simply forward to the memory port
-    memPort.sendPacket(pkt);
+    requestPort.sendPacket(pkt);
 
     return true;
 }
@@ -195,17 +192,12 @@ VortexObj::handleResponse(PacketPtr pkt)
     // tries to send another request immediately (e.g., in the same callchain).
     blocked = false;
 
-    // Simply forward to the memory port
-    if (pkt->req->isInstFetch()) {
-        instPort.sendPacket(pkt);
-    } else {
-        dataPort.sendPacket(pkt);
-    }
+    // Placeholder for real Vortex end. Just mirror the input to the output
+    responsePort.sendPacket(pkt);
 
     // For each of the cpu ports, if it needs to send a retry, it should do it
     // now since this memory object may be unblocked now.
-    instPort.trySendRetry();
-    dataPort.trySendRetry();
+    // instPort.trySendRetry();
 
     return true;
 }
@@ -214,7 +206,7 @@ void
 VortexObj::handleFunctional(PacketPtr pkt)
 {
     // Just pass this on to the memory side to handle for now.
-    memPort.sendFunctional(pkt);
+    requestPort.sendFunctional(pkt);
 }
 
 AddrRangeList
@@ -222,14 +214,13 @@ VortexObj::getAddrRanges() const
 {
     DPRINTF(VortexObj, "Sending new ranges\n");
     // Just use the same ranges as whatever is on the memory side.
-    return memPort.getAddrRanges();
+    return requestPort.getAddrRanges();
 }
 
 void
 VortexObj::sendRangeChange()
 {
-    instPort.sendRangeChange();
-    dataPort.sendRangeChange();
+    responsePort.sendRangeChange();
 }
 
 } // namespace gem5

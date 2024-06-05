@@ -63,8 +63,10 @@ system.cpu.icache_port = system.membus.cpu_side_ports
 system.cpu.dcache_port = system.membus.cpu_side_ports
 
 # Hook Vortex ports up to the membus
-# Note: side_ports is a vector. The process is symmetrical
-system.vortex.mem_side = system.membus.cpu_side_ports
+# Note: side_ports is a vector. The process is symmetrical, and the new port is appended
+# CPU side port is a new name to master port
+system.vortex.request_port = system.membus.cpu_side_ports
+system.vortex.response_port = system.membus.cpu_side_ports
 
 
 # create the interrupt controller for the CPU and connect to the membus
@@ -79,8 +81,14 @@ system.mem_ctrl.dram = DDR3_1600_8x8()
 system.mem_ctrl.dram.range = system.mem_ranges[0]
 system.mem_ctrl.port = system.membus.mem_side_ports
 
+# Create a custom memory controller to interconnect vortex with XBar
+system.vortex_mem_ctrl = MemCtrl()
+system.vortex_mem_ctrl.dram = NVM_2400_1x64()
+system.vortex_mem_ctrl.dram.range = system.mem_ranges[1]
+system.vortex_mem_ctrl.port = system.membus.mem_side_ports
+
 # Connect the system up to the membus
-system.system_port = system.membus.cpu_side_ports
+system.system_port = system.membus.cpu_side_ports[0:2]
 
 # Create a process for a simple "Hello World" application
 process = Process()
