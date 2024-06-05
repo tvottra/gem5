@@ -53,17 +53,19 @@ system.mem_ranges = [
 system.cpu = X86TimingSimpleCPU()
 
 # Create the simple memory object
-system.memobj = VortexObj()
-
-# Hook the CPU ports up to the cache
-system.cpu.icache_port = system.memobj.inst_port
-system.cpu.dcache_port = system.memobj.data_port
+system.vortex = VortexObj()
 
 # Create a memory bus, a coherent crossbar, in this case
 system.membus = SystemXBar()
 
-# Connect the memobj
-system.memobj.mem_side = system.membus.cpu_side_ports
+# Hook the CPU ports up to the membus
+system.cpu.icache_port = system.membus.cpu_side_ports
+system.cpu.dcache_port = system.membus.cpu_side_ports
+
+# Hook Vortex ports up to the membus
+# Note: side_ports is a vector. The process is symmetrical
+system.vortex.mem_side = system.membus.cpu_side_ports
+
 
 # create the interrupt controller for the CPU and connect to the membus
 system.cpu.createInterruptController()
