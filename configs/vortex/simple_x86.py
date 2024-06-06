@@ -54,7 +54,11 @@ system.clk_domain.voltage_domain = VoltageDomain()
 
 # Set up the system
 system.mem_mode = "timing"  # Use timing accesses
-system.mem_ranges = [AddrRange("512MB")]  # Create an address range
+dram_mib_sz = 10
+vortex_mib_sz = 1
+units = "MB"
+system.mem_ranges = [AddrRange(start=Addr(0), end=Addr(str(dram_mib_sz) + units)),
+                     AddrRange(start=Addr(str(dram_mib_sz) + units), end=Addr(str(dram_mib_sz + vortex_mib_sz) + units))]
 
 # Create a simple CPU
 # You can use ISA-specific CPU models for different workloads:
@@ -78,17 +82,15 @@ system.cpu.interrupts[0].pio = system.membus.mem_side_ports
 system.cpu.interrupts[0].int_requestor = system.membus.cpu_side_ports
 system.cpu.interrupts[0].int_responder = system.membus.mem_side_ports
 
-# Create a DDR3 memory controller and connect it to the membus
-system.mem_ctrl = MemCtrl()
-system.mem_ctrl.dram = DDR3_1600_8x8()
-system.mem_ctrl.dram.range = system.mem_ranges[0]
-system.mem_ctrl.port = system.membus.mem_side_ports
+#Create a DDR3 memory controller and connect it to the membus
+system.dram_ctrl = MemCtrl()
+system.dram_ctrl.dram = DDR3_1600_8x8(range=system.mem_ranges[0])
+system.dram_ctrl.port = system.membus.mem_side_ports
 
-# Create a Vortex memory controller and connect it to the membus
-system.vortex_mem_ctrl = MemCtrl()
-system.vortex_mem_ctrl.dram = VortexMemory()
-system.vortex_mem_ctrl.dram.range = system.mem_ranges[1]
-system.vortex_mem_ctrl.port = system.membus.mem_side_ports
+# #Create a Vortex memory controller and connect it to the membus
+system.vortex_ctrl = MemCtrl()
+system.vortex_ctrl.dram = VortexMemory(range=system.mem_ranges[1])
+system.vortex_ctrl.port = system.membus.mem_side_ports
 
 # Connect the system up to the membus
 system.system_port = system.membus.cpu_side_ports
@@ -97,10 +99,11 @@ system.system_port = system.membus.cpu_side_ports
 # workloads compiled to those ISAs. Other "hello world" binaries for other ISAs
 # can be found in "tests/test-progs/hello".
 thispath = os.path.dirname(os.path.realpath(__file__))
+prog_name = "vortex_demo"
 binary = os.path.join(
     thispath,
-    "../../../",
-    "tests/test-progs/hello/bin/x86/linux/hello",
+    "../../",
+    f"tests/test-progs/{prog_name}/bin/x86/linux/{prog_name}",
 )
 
 system.workload = SEWorkload.init_compatible(binary)

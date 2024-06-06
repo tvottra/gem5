@@ -1,0 +1,7 @@
+Import('*')
+
+
+SimObject('VortexMemory.py', sim_objects=['VortexMemory'])
+Source('vortex_memory.cc')
+
+DebugFlag('VortexMemory', "Vortex mock output")
