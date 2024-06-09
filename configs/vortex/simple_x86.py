@@ -88,14 +88,11 @@ system.cpu.interrupts[0].int_requestor = system.membus.cpu_side_ports
 system.cpu.interrupts[0].int_responder = system.membus.mem_side_ports
 
 # Create a DDR3 memory controller and connect it to the membus
-system.dram_ctrl = MemCtrl()
-system.dram_ctrl.dram = DDR3_1600_8x8(range=system.mem_ranges[0])
-system.dram_ctrl.port = system.membus.mem_side_ports
-
-# #Create a Vortex memory controller and connect it to the membus
-system.vortex_ctrl = MemCtrl()
-system.vortex_ctrl.dram = VortexMemory(range=system.mem_ranges[1])
-system.vortex_ctrl.port = system.membus.mem_side_ports
+system.mem_ctrl = HeteroMemCtrl()
+system.mem_ctrl.dram = DDR3_1600_8x8(range=system.mem_ranges[0])
+system.mem_ctrl.nvm = VortexMemory(range=system.mem_ranges[1])
+system.memories = [system.mem_ctrl.dram, system.mem_ctrl.nvm]
+system.mem_ctrl.port = system.membus.mem_side_ports
 
 # Connect the system up to the membus
 system.system_port = system.membus.cpu_side_ports
