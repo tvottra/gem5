@@ -57,8 +57,13 @@ system.mem_mode = "timing"  # Use timing accesses
 dram_mib_sz = 10
 vortex_mib_sz = 1
 units = "MB"
-system.mem_ranges = [AddrRange(start=Addr(0), end=Addr(str(dram_mib_sz) + units)),
-                     AddrRange(start=Addr(str(dram_mib_sz) + units), end=Addr(str(dram_mib_sz + vortex_mib_sz) + units))]
+system.mem_ranges = [
+    AddrRange(start=Addr(0), end=Addr(str(dram_mib_sz) + units)),
+    AddrRange(
+        start=Addr(str(dram_mib_sz) + units),
+        end=Addr(str(dram_mib_sz + vortex_mib_sz) + units),
+    ),
+]
 
 # Create a simple CPU
 # You can use ISA-specific CPU models for different workloads:
@@ -82,7 +87,7 @@ system.cpu.interrupts[0].pio = system.membus.mem_side_ports
 system.cpu.interrupts[0].int_requestor = system.membus.cpu_side_ports
 system.cpu.interrupts[0].int_responder = system.membus.mem_side_ports
 
-#Create a DDR3 memory controller and connect it to the membus
+# Create a DDR3 memory controller and connect it to the membus
 system.dram_ctrl = MemCtrl()
 system.dram_ctrl.dram = DDR3_1600_8x8(range=system.mem_ranges[0])
 system.dram_ctrl.port = system.membus.mem_side_ports

@@ -1,10 +1,10 @@
-
 from m5.objects.NVMInterface import NVMInterface
 
+
 class VortexMemory(NVMInterface):
-    type = 'VortexMemory'
-    cxx_header = 'dev/vortex/vortex_memory.hh'
-    cxx_class = 'gem5::memory::VortexMemory'
+    type = "VortexMemory"
+    cxx_header = "dev/vortex/vortex_memory.hh"
+    cxx_class = "gem5::memory::VortexMemory"
 
     write_buffer_size = 128
     read_buffer_size = 64
