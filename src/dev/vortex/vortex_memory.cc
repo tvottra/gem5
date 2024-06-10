@@ -5,11 +5,40 @@
 #include "debug/VortexMemory.hh"
 #include "mem/mem_interface.hh"
 #include "mem/nvm_interface.hh"
+#include "mem/packet.hh"
+
 namespace gem5 {
 
 namespace memory {
 VortexMemory::VortexMemory(const VortexMemoryParams& params)
-    : NVMInterface(params) {}
+    : NVMInterface(params),
+      data_addr(params.data_addr),
+      start_addr(params.start_addr),
+      done_addr(params.done_addr),
+      data_sz_bytes(params.data_sz) {}
+
+void VortexMemory::access(PacketPtr pkt) {
+    AbstractMemory::access(pkt);
+    if (pkt->isWrite() && pkt->getAddr() == start_addr) {
+        const uint32_t* payload_buf = pkt->getConstPtr<uint32_t>();
+        const uint32_t payload = payload_buf[0];
+        DPRINTF(VortexMemory, "Start address written to with payload %#x\n",
+                payload);
+        if (payload != 0) {
+            DPRINTF(VortexMemory, "Starting operation!\n");
+
+            uint8_t* data_addr_in_host = toHostAddr(data_addr);
+            std::memcpy(data, data_addr_in_host, data_sz_bytes);
+
+            DPRINTF(VortexMemory, "Data read from data address: %#x\n",
+                    data[0]);
+        }
+    } else if (pkt->isWrite() && pkt->getAddr() == done_addr) {
+        DPRINTF(VortexMemory, "Done address accessed\n");
+    } else if (pkt->isWrite() && pkt->getAddr() == data_addr) {
+        DPRINTF(VortexMemory, "Data address accessed\n");
+    }
+}
 
 MemPacket* VortexMemory::decodePacket(const PacketPtr pkt, Addr pkt_addr,
                                       unsigned size, bool is_read,
@@ -84,9 +113,13 @@ MemPacket* VortexMemory::decodePacket(const PacketPtr pkt, Addr pkt_addr,
     assert(row < rowsPerBank);
     assert(row < Bank::NO_ROW);
 
-    DPRINTF(VortexMemory, "Address: %#x Rank %d Bank %d Row %d\n", pkt_addr,
-            rank, bank, row);
-    DPRINTF(VortexMemory, "%s\n", getAddrRange().to_string());
+    if (pkt_addr == data_addr) {
+        DPRINTF(VortexMemory, "Data address: %#x\n", pkt_addr);
+    } else if (pkt_addr == start_addr) {
+        DPRINTF(VortexMemory, "Start address: %#x\n", pkt_addr);
+    } else if (pkt_addr == done_addr) {
+        DPRINTF(VortexMemory, "Done address: %#x\n", pkt_addr);
+    }
 
     // create the corresponding memory packet with the entry time and
     // ready time set to the current tick, the latter will be updated
@@ -95,6 +128,6 @@ MemPacket* VortexMemory::decodePacket(const PacketPtr pkt, Addr pkt_addr,
 
     return new MemPacket(pkt, is_read, false, pseudo_channel, rank, bank, row,
                          bank_id, pkt_addr, size);
-}
+}  // TODO: replace most of this with just a call to the parent's decodePacket
 }  // namespace memory
 }  // namespace gem5

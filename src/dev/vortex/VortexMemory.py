@@ -1,4 +1,5 @@
 from m5.objects.NVMInterface import NVMInterface
+from m5.params import *
 
 
 class VortexMemory(NVMInterface):
@@ -39,3 +40,10 @@ class VortexMemory(NVMInterface):
     tWTR = "1.666ns"
     tRTW = "1.666ns"
     tCS = "1.666ns"
+
+    data_addr = Param.Addr("Address of payload the GPU will use")
+    start_addr = Param.Addr("Address of start signal for GPU")
+    done_addr = Param.Addr(
+        "Address the GPU will use to indicate it's done executing the payload"
+    )
+    data_sz = Param.MemorySize("Size of the payload the GPU will use")

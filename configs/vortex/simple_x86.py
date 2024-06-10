@@ -90,10 +90,14 @@ system.cpu.interrupts[0].int_responder = system.membus.mem_side_ports
 # Create a DDR3 memory controller and connect it to the membus
 system.mem_ctrl = HeteroMemCtrl()
 system.mem_ctrl.dram = DDR3_1600_8x8(range=system.mem_ranges[0])
-system.mem_ctrl.nvm = VortexMemory(range=system.mem_ranges[1])
-system.memories = [system.mem_ctrl.dram, system.mem_ctrl.nvm]
+system.mem_ctrl.nvm = VortexMemory(
+    range=system.mem_ranges[1],
+    data_addr=0xA00000,
+    start_addr=0xA01000,
+    done_addr=0xA02000,
+    data_sz="1024B",
+)
 system.mem_ctrl.port = system.membus.mem_side_ports
-
 # Connect the system up to the membus
 system.system_port = system.membus.cpu_side_ports
 
@@ -123,6 +127,16 @@ system.cpu.createThreads()
 root = Root(full_system=False, system=system)
 # instantiate all of the objects we've created above
 m5.instantiate()
+
+# Map memory pages, ensure addresses are page-aligned
+PAGE_SIZE = 4096
+DATA_ADDR = 0xA00000  # Align to 4 KB boundary
+START_ADDR = 0xA01000  # Align to 4 KB boundary
+END_ADDR = 0xA02000  # Align to 4 KB boundary
+
+process.map(DATA_ADDR, DATA_ADDR, PAGE_SIZE)
+process.map(START_ADDR, START_ADDR, PAGE_SIZE)
+process.map(END_ADDR, END_ADDR, PAGE_SIZE)
 
 print(f"Beginning simulation!")
 exit_event = m5.simulate()
