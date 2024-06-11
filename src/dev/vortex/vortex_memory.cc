@@ -27,11 +27,23 @@ void VortexMemory::access(PacketPtr pkt) {
         if (payload != 0) {
             DPRINTF(VortexMemory, "Starting operation!\n");
 
-            uint8_t* data_addr_in_host = toHostAddr(data_addr);
-            std::memcpy(data, data_addr_in_host, data_sz_bytes);
+            uint8_t* data_paddr_in_host = toHostAddr(data_addr);
+            DPRINTF(VortexMemory, "Data paddress: %p\n",
+                    static_cast<void*>(data_paddr_in_host));
 
+            std::memcpy(data, data_paddr_in_host, data_sz_bytes);
             DPRINTF(VortexMemory, "Data read from data address: %#x\n",
                     data[0]);
+
+            DPRINTF(VortexMemory, "Writing to done address\n");
+            // Write the completion signal to done_addr
+            uint32_t done_signal = 1;  // Indicate completion
+            uint8_t* done_paddr_in_host = toHostAddr(done_addr);
+            std::memcpy(done_paddr_in_host, &done_signal, sizeof(done_signal));
+            DPRINTF(VortexMemory, "Done signal written to done address\n");
+
+            uint32_t done_value = *done_paddr_in_host;
+            DPRINTF(VortexMemory, "Done value: %#x\n", done_value);
         }
     } else if (pkt->isWrite() && pkt->getAddr() == done_addr) {
         DPRINTF(VortexMemory, "Done address accessed\n");

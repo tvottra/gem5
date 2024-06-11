@@ -12,6 +12,7 @@ class VortexMemory : public memory::NVMInterface {
     const Addr start_addr;
     const Addr done_addr;
     const int data_sz_bytes;
+    const int done_payload = 1;
 
     uint32_t data[1024];  // 4KB of data
 
