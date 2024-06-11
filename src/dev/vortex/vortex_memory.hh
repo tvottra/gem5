@@ -12,7 +12,7 @@ class VortexMemory : public memory::NVMInterface {
     const Addr start_addr;
     const Addr done_addr;
     const int data_sz_bytes;
-    const int done_payload = 1;
+    const int DONE_SIGNAL = 1;
 
     uint32_t data[1024];  // 4KB of data
 
@@ -20,8 +20,6 @@ class VortexMemory : public memory::NVMInterface {
     VortexMemory(const VortexMemoryParams& params);
 
     void access(PacketPtr pkt) override;
-    MemPacket* decodePacket(const PacketPtr pkt, Addr pkt_addr, unsigned size,
-                            bool is_read, uint8_t pseudo_channel) override;
 };
 }  // namespace memory
 
