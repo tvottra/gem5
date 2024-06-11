@@ -91,8 +91,10 @@ PAGE_SIZE = 4096
 DATA_ADDR = 0xA00000  # Align to 4 KB boundary
 START_ADDR = 0xA01000  # Align to 4 KB boundary
 DONE_ADDR = 0xA02000  # Align to 4 KB boundary
+PAYLOAD_SZ = "1024B"
+LATENCY_OF_WORK = "100us"
 
-# Create a DDR3 memory controller and connect it to the membus
+# Create a heterogenous memory controller and connect it to the membus
 system.mem_ctrl = HeteroMemCtrl()
 system.mem_ctrl.dram = DDR3_1600_8x8(range=system.mem_ranges[0])
 system.mem_ctrl.nvm = VortexMemory(
@@ -100,7 +102,8 @@ system.mem_ctrl.nvm = VortexMemory(
     data_addr=DATA_ADDR,
     start_addr=START_ADDR,
     done_addr=DONE_ADDR,
-    data_sz="1024B",
+    data_sz=PAYLOAD_SZ,
+    latency_of_work=LATENCY_OF_WORK,
 )
 system.mem_ctrl.port = system.membus.mem_side_ports
 # Connect the system up to the membus

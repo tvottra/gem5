@@ -8,13 +8,19 @@ namespace gem5 {
 namespace memory {
 class VortexMemory : public memory::NVMInterface {
    private:
+    static constexpr int MAX_PAYLOAD_SZ = 1024;
+    void doWork();
+
     const Addr data_addr;
     const Addr start_addr;
     const Addr done_addr;
     const int data_sz_bytes;
     const int DONE_SIGNAL = 1;
+    const Tick latency_of_work;
 
-    uint32_t data[1024];  // 4KB of data
+    EventFunctionWrapper event;
+
+    uint32_t data[MAX_PAYLOAD_SZ];  // 4KB of data
 
    public:
     VortexMemory(const VortexMemoryParams& params);

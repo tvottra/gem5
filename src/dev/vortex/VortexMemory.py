@@ -47,3 +47,4 @@ class VortexMemory(NVMInterface):
         "Address the GPU will use to indicate it's done executing the payload"
     )
     data_sz = Param.MemorySize("Size of the payload the GPU will use")
+    latency_of_work = Param.Latency("Latency of the work the GPU will do")

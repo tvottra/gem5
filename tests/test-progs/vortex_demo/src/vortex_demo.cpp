@@ -24,6 +24,7 @@ int main() {
 
     *START_ADDR = 1;
     uint32_t done_signal = *DONE_ADDR;
+
     while (done_signal == 0) {
         printf("CPU: Waiting for GPU to finish. Done signal: %d\n",
                done_signal);

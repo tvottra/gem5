@@ -15,7 +15,25 @@ VortexMemory::VortexMemory(const VortexMemoryParams& params)
       data_addr(params.data_addr),
       start_addr(params.start_addr),
       done_addr(params.done_addr),
-      data_sz_bytes(params.data_sz) {}
+      data_sz_bytes(params.data_sz),
+      latency_of_work(params.latency_of_work),
+      event([this] { doWork(); }, name() + ".event") {}
+
+void VortexMemory::doWork() {
+    uint8_t* data_paddr_in_host = toHostAddr(data_addr);
+    std::memcpy(data, data_paddr_in_host, data_sz_bytes);
+    DPRINTF(VortexMemory, "GPU: Data read from the data address: %#x\n",
+            data[0]);
+
+    DPRINTF(VortexMemory,
+            "GPU: Writing to the done address to indicate completion of "
+            "operation.\n");
+
+    uint8_t* done_paddr_in_host = toHostAddr(done_addr);
+    std::memcpy(done_paddr_in_host, &DONE_SIGNAL, sizeof(DONE_SIGNAL));
+    DPRINTF(VortexMemory,
+            "GPU: Done signal has been written to the done address.\n");
+}
 
 void VortexMemory::access(PacketPtr pkt) {
     AbstractMemory::access(pkt);
@@ -30,21 +48,7 @@ void VortexMemory::access(PacketPtr pkt) {
 
         if (payload != 0) {
             DPRINTF(VortexMemory, "GPU: Starting operation!\n");
-
-            uint8_t* data_paddr_in_host = toHostAddr(data_addr);
-            std::memcpy(data, data_paddr_in_host, data_sz_bytes);
-            DPRINTF(VortexMemory, "GPU: Data read from the data address: %#x\n",
-                    data[0]);
-
-            DPRINTF(
-                VortexMemory,
-                "GPU: Writing to the done address to indicate completion of "
-                "operation.\n");
-
-            uint8_t* done_paddr_in_host = toHostAddr(done_addr);
-            std::memcpy(done_paddr_in_host, &DONE_SIGNAL, sizeof(DONE_SIGNAL));
-            DPRINTF(VortexMemory,
-                    "GPU: Done signal has been written to the done address.\n");
+            schedule(event, curTick() + latency_of_work);
         }
     }
 }
